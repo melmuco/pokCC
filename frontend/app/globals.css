@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 120% 98%;
+  --foreground: 210 10% 20%;
+  --primary: 253 94% 59%;
+  --primary-foreground: 210 10% 98%;
+  border: hsl(var(--background) / 0.5);
+  input: hsl(var(--background) / 0.5);
+  ring: hsl(var(--primary) / 40%);
+}
+
+.dark {
+  --background: 210 12% 10%;
+  --foreground: 210 10% 98%;
+  --primary: 253 94% 59%;
+  --primary-foreground: 210 10% 98%;
+  border: hsl(var(--background) / 0.5);
+  input: hsl(var(--background) / 0.5);
+  ring: hsl(var(--primary) / 40%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

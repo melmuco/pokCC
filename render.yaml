@@ -1,0 +1,29 @@
+# Render.com configuration for pokCC backend
+# https://render.com/docs/reference/blueprints/
+
+databases:
+  - name: pokcc-db
+    plan: free
+    postgresVersion: 16
+    databaseName: pokcc
+    databaseUser: pokcc_user
+
+services:
+  - type: web
+    name: pokcc-backend
+    env: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm run build
+    startCommand: node dist/main.js
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          databaseName: pokcc
+          databaseUser: pokcc_user
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generate: true
+    healthCheckPath: /health

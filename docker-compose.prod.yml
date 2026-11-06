@@ -1,0 +1,71 @@
+# docker-compose.prod.yml — production (backend only)
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml build
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# The backend needs a PostgreSQL and a Redis. In production these are external
+# managed services (Railway Postgres / Redis, or any other provider) — point
+# DATABASE_URL and REDIS_URL at them. If you prefer to run them locally too,
+# uncomment the postgres/redis services below.
+#
+# Required env vars (set in the container environment or a .env file):
+#   DATABASE_URL  = postgresql://user:pass@host:5432/db   (with SSL in prod)
+#   JWT_SECRET   = at least 32 random bytes, keep it private
+#   REDIS_URL    = redis://host:6379
+#   PORT         = 4000 (optional, defaults to 4000)
+#   FRONTEND_URL = https://pokcc.vercel.app (CORS origin)
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: pokcc-backend-prod
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: ${PORT:-4000}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL:-https://pokcc.vercel.app}
+    ports:
+      - "${PORT:-4000}:4000"
+    volumes:
+      - backend_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:4000/api',r=>{process.exit(r.statusCode<500?0:1)})\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+# --- Optional: local Postgres / Redis for self-hosted production -------------
+#  postgres:
+#    image: postgres:16-alpine
+#    restart: unless-stopped
+#    environment:
+#      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+#      POSTGRES_DB: ${POSTGRES_DB:-pokcc}
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+#    healthcheck:
+#      test: ["CMD-SHELL", "pg_isready -U postgres"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#
+#  redis:
+#    image: redis:7-alpine
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "redis-cli", "ping"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+
+volumes:
+  backend_uploads:
+  postgres_data:

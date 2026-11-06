@@ -1,0 +1,8 @@
+import { Module } from '@nestjs/common';
+import { ScanGateway } from './scan.gateway';
+
+@Module({
+  providers: [ScanGateway],
+  exports: [ScanGateway],
+})
+export class GatewayModule {}
