@@ -8,102 +8,99 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Utente dell'applicazione (account)
 model Utente {
-  id            Int            @id @default(autoincrement())
-  email         String         @unique
-  password_hash String
-  name          String?
-  image         String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  collezioni    Collezione[]
-  carteInCollezione CartaInCollezione[]
-  scansioni     Scansione[]
+  id                 Int                  @id @default(autoincrement())
+  email              String               @unique
+  password_hash      String
+  name               String?
+  image              String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  collezioniTutte    Collezione[]         @relation("UtenteCollezioni")
+  carteInCollezioneTutte CartaInCollezione[] @relation("UtenteCarteInCollezione")
+  scansioni          Scansione[]
 
   @@index([email])
 }
 
-// Set di carte (es. "Base Set", "Jungle", "Fossil", ...)
 model Set {
-  id            Int       @id @default(autoincrement())
-  name          String    @unique
-  series        String?
-  releaseDate   DateTime?
-  totalCards    Int?
-  symbolImage   String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  carte         Carta[]
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  series      String?
+  releaseDate DateTime?
+  totalCards  Int?
+  symbolImage String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  carte       Carta[]  @relation("SetCarte")
 
   @@index([name])
 }
 
-// Carta singola (entry del catalogo TCG)
 model Carta {
-  id              Int               @id @default(autoincrement())
-  tcgplayerId     String?           @unique
-  name            String
-  set             Set?              @relation(fields: [setId], references: [id], onDelete: SET NULL)
-  setId           Int?
-  number          String?
-  rarity          String?
-  supertype       String?
-  types           String[]
-  hp              Int?
-  artist          String?
-  image_url       String?
-  image_url_small String?
+  id               Int               @id @default(autoincrement())
+  tcgplayerId      String?           @unique
+  name             String
+  setId            Int?
+  number           String?
+  rarity           String?
+  supertype        String?
+  types            String[]
+  hp               Int?
+  artist           String?
+  image_url        String?
+  image_url_small  String?
   local_image_path String?
-  basePrice       Float?            // Cached current price from TCG API
-  created_at      DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  inCollezioni    CartaInCollezione[]
-  priceSnapshots  PriceSnapshot[]
-  imageReferences ImageReference[]
+  basePrice        Float?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  set              Set?              @relation("SetCarte", fields: [setId], references: [id])
+  inCollezioni     CartaInCollezione[] @relation("CartaInCollezioni")
+  priceSnapshots   PriceSnapshot[]   @relation("CartaPriceSnapshots")
+  imageReferences  ImageReference[]  @relation("CartaImageReferences")
 
   @@index([setId])
   @@index([name])
   @@index([tcgplayerId])
 }
 
-// Collezione manuale creata da un utente
 model Collezione {
-  id            Int               @id @default(autoincrement())
-  owner_id      Int
-  owner         Utente            @relation(fields: [owner_id], references: [id], onDelete: CASCADE)
-  nome          String
-  descrizione   String?
-  is_public     Boolean           @default(false)
-  image_url     String?
-  created_at    DateTime          @default(now())
-  updated_at    DateTime          @updatedAt
-  carte         CartaInCollezione[]
+  id           Int                  @id @default(autoincrement())
+  nome         String
+  descrizione  String?
+  is_public    Boolean              @default(false)
+  image_url    String?
+  created_at   DateTime             @default(now())
+  updated_at   DateTime             @updatedAt
+  carte        CartaInCollezione[]  @relation("CollezioneCarte")
+  owner_id     Int
+  owner        Utente                @relation("UtenteCollezioni", fields: [owner_id], references: [id])
 
   @@index([owner_id])
 }
 
-// Carta inserita all'interno di una collezione
 model CartaInCollezione {
-  id             Int        @id @default(autoincrement())
-  collezione_id  Int
-  collezione     Collezione @relation(fields: [collezione_id], references: [id], onDelete: CASCADE)
-  card_id        Int
-  carta          Carta      @relation(fields: [card_id], references: [id], onDelete: CASCADE)
-  condition      Condition?
-  graded_company GradedCompany?
-  graded_grade   Int?
-  condition_date DateTime?
-  quantity       Int        @default(1)
-  acquired_date  DateTime?
-  acquired_price Float?
-  note           String?
-  created_at     DateTime   @default(now())
-  updated_at     DateTime   @updatedAt
-  scan_id        String?
+  id               Int        @id @default(autoincrement())
+  collection_id    Int
+  card_id          Int
+  condition        Condition?
+  graded_company   GradedCompany?
+  graded_grade     Int?
+  condition_date   DateTime?
+  quantity         Int        @default(1)
+  acquired_date    DateTime?
+  acquired_price   Float?
+  note             String?
+  created_at       DateTime   @default(now())
+  updated_at       DateTime   @updatedAt
+  scan_id          String?
+  collezione       Collezione @relation("CollezioneCarte", fields: [collection_id], references: [id])
+  carta            Carta      @relation("CartaInCollezioni", fields: [card_id], references: [id])
+  owner_id         Int
+  owner            Utente      @relation("UtenteCarteInCollezione", fields: [owner_id], references: [id])
 
-  @@unique([collezione_id, card_id])
-  @@index([collezione_id])
+  @@unique([collection_id, card_id])
+  @@index([collection_id])
   @@index([card_id])
 }
 
@@ -122,55 +119,51 @@ enum GradedCompany {
   CGC
 }
 
-// Snapshot di prezzo storico per una carta
 model PriceSnapshot {
-  id        Int      @id @default(autoincrement())
-  card_id   Int
-  carta     Carta    @relation(fields: [card_id], references: [id], onDelete: CASCADE)
-  source    String
-  date      DateTime
-  low       Float?
-  high      Float?
-  mid       Float?
-  volume    Float?
+  id       Int      @id @default(autoincrement())
+  cardId   Int
+  source   String
+  date     DateTime
+  low      Float?
+  high     Float?
+  mid      Float?
+  volume   Float?
   createdAt DateTime @default(now())
+  carta    Carta    @relation("CartaPriceSnapshots", fields: [cardId], references: [id])
 
-  @@index([card_id])
+  @@index([cardId])
   @@index([source])
   @@index([date])
 }
 
-// Riferimento immagine alternativo / scan / feature vector
 model ImageReference {
-  id            Int      @id @default(autoincrement())
-  card_id       Int
-  carta         Carta    @relation(fields: [card_id], references: [id], onDelete: CASCADE)
-  url           String
-  thumbnail_url String?
+  id             Int      @id @default(autoincrement())
+  cardId         Int
+  url            String
+  thumbnail_url  String?
   feature_vector Json?
-  createdAt     DateTime @default(now())
+  createdAt      DateTime @default(now())
+  carta          Carta    @relation("CartaImageReferences", fields: [cardId], references: [id])
 
-  @@index([card_id])
+  @@index([cardId])
 }
 
-// Scansione di carta da immagine
 model Scansione {
-  id            Int        @id @default(autoincrement())
-  ocrText       String?
-  setName       String?
-  cardNumber    String?
-  cardName      String?
-  confidence    Float?
-  status        ScansioneStatus @default(PENDING)
-  matchedCardId Int?
-  matchedCard   Carta?     @relation(fields: [matchedCardId], references: [id])
-  originalUrl   String?
-  mediumUrl     String?
-  thumbnailUrl  String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  user          Utente?    @relation(fields: [userId], references: [id], onDelete: SET NULL)
-  userId        Int?
+  id             Int             @id @default(autoincrement())
+  ocrText         String?
+  setName         String?
+  cardNumber      String?
+  cardName        String?
+  confidence      Float?
+  status          ScansioneStatus @default(PENDING)
+  matchedCardId   Int?
+  originalUrl     String?
+  mediumUrl       String?
+  thumbnailUrl    String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  userId          Int
+  user            Utente          @relation(fields: [userId], references: [id])
 
   @@index([status])
   @@index([setName])

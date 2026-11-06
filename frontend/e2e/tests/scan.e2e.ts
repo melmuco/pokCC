@@ -18,7 +18,7 @@ test.describe('Scan Tests', () => {
     await page.goto('/scansione');
 
     const socketAvailable = await page.evaluate(() => {
-      return typeof window.io !== 'undefined' || window.WebSocket !== undefined;
+      return typeof (window as any).io !== 'undefined' || window.WebSocket !== undefined;
     });
     await expect(socketAvailable).toBeTruthy();
   });
@@ -27,7 +27,8 @@ test.describe('Scan Tests', () => {
     await page.goto('/scansione');
 
     const uploadInput = await page.locator('input[type="file"]');
-    await uploadInput.setInputPath('test/fixtures/card-sample.jpg');
+    // setInputPath removed in v1.40.0, using setInputFiles instead
+    await uploadInput.setInputFiles('test/fixtures/card-sample.jpg');
 
     await page.waitForTimeout(1000);
 

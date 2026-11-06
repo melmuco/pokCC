@@ -10,14 +10,14 @@ import { useScanSocket } from '@/hooks/use-scan-socket';
 import type { Scansione, Carta } from '@/types';
 
 interface MatchCardProps {
-  scansione: Scansione & { matchedCard: Carta | null };
+  scansione: Scansione;
+  matchedCard: Carta | null;
   onConfirm: () => void;
   onReject: () => void;
   onRepeat: () => void;
 }
 
-function MatchCard({ scansione, onConfirm, onReject, onRepeat }: MatchCardProps) {
-  const matchedCard = scansione.matchedCard;
+function MatchCard({ scansione, matchedCard, onConfirm, onReject, onRepeat }: MatchCardProps) {
 
   if (!matchedCard) {
     return (
@@ -214,7 +214,7 @@ export default function ScansionePage() {
 
     try {
       const response = await uploadScanImage(file);
-      const scanId = response.data.id;
+      const scanId = (response.data as any).id;
       setScanId(scanId);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Errore durante la scansione');
@@ -318,6 +318,7 @@ export default function ScansionePage() {
             {step === 'result' && scansione && (
               <MatchCard
                 scansione={scansione}
+                matchedCard={scansione.matchedCard || null}
                 onConfirm={handleConfirm}
                 onReject={handleReject}
                 onRepeat={handleRepeat}

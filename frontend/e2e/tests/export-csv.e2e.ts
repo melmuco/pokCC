@@ -45,7 +45,8 @@ test.describe('Export CSV Tests', () => {
         exportBtn.first().click(),
       ]);
 
-      const content = await (await download.path()).then(path => require('fs').readFileSync(path, 'utf8'));
+      const path = await download.path();
+      const content = path ? require('fs').readFileSync(path, 'utf8') : '';
       const lines = content.split('\n');
       const headers = lines[0].split(',');
 

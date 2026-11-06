@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
   experimental: {
     serverActions: {
       bodySize: 1024 * 1024 * 10,

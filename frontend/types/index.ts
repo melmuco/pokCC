@@ -1,17 +1,9 @@
-export interface Scansione {
+export interface Set {
   id: number;
-  ocrText: string | null;
-  setName: string | null;
-  cardNumber: string | null;
-  cardName: string | null;
-  confidence: number | null;
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
-  matchedCardId: number | null;
-  originalUrl: string | null;
-  mediumUrl: string | null;
-  thumbnailUrl: string | null;
-  createdAt: string;
-  updatedAt: string;
+  name: string;
+  series: string | null;
+  releaseDate: string | null;
+  symbolImage: string | null;
 }
 
 export interface Carta {
@@ -29,12 +21,21 @@ export interface Carta {
   set: Set | null;
 }
 
-export interface Set {
+export interface Scansione {
   id: number;
-  name: string;
-  series: string | null;
-  releaseDate: string | null;
-  symbolImage: string | null;
+  ocrText: string | null;
+  setName: string | null;
+  cardNumber: string | null;
+  cardName: string | null;
+  confidence: number | null;
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  matchedCardId: number | null;
+  matchedCard: Carta | null;
+  originalUrl: string | null;
+  mediumUrl: string | null;
+  thumbnailUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PriceSnapshot {

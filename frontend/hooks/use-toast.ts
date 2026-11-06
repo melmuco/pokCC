@@ -14,9 +14,11 @@ type State = {
   toasts: Toast[];
 };
 
-type Dispatch = (action: { type: 'ADD_TOAST'; toast: Toast } | { type: 'REMOVE_TOAST'; id: string }) => void;
+type ToastAction =
+  | { type: 'ADD_TOAST'; toast: Toast }
+  | { type: 'REMOVE_TOAST'; id: string };
 
-const reducer = (state: State, action: Dispatch): State => {
+const reducer = (state: State, action: ToastAction): State => {
   switch (action.type) {
     case 'ADD_TOAST':
       return { ...state, toasts: [...state.toasts, action.toast] };
